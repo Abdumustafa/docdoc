@@ -1,23 +1,21 @@
 import 'package:docdoc/core/helpers/spacing.dart';
 import 'package:docdoc/core/theming/styles.dart';
 import 'package:docdoc/core/widget/app_text_buttom.dart';
-import 'package:docdoc/core/widget/app_text_form_field.dart';
+import 'package:docdoc/feutures/login/data/models/login_request_body.dart';
+import 'package:docdoc/feutures/login/ui/widget/email_and_password.dart';
 import 'package:docdoc/feutures/login/ui/widget/terms_and_conditions_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../widget/dont_have_account_text.dart';
+import '../../logic/login_cubit.dart';
+import '../widget/already_have_account_text.dart';
+import '../widget/login_bloc_listener.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  final formKey = GlobalKey<FormState>();
+class LoginScreen extends StatelessWidget {
+  LoginScreen({super.key});
   bool isObscuretext = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,46 +36,31 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyles.font14GrayRegular,
                 ),
                 verticalSpace(36),
-                Form(
-                  key: formKey,
-                  child: Column(
-                    children: [
-                      AppTextFormField(
-                        hintText: "Email",
-                      ),
-                      verticalSpace(18),
-                      AppTextFormField(
-                        hintText: "Password",
-                        isObscureText: isObscuretext,
-                        suffixIcon: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              isObscuretext = !isObscuretext;
-                            });
-                          },
-                          child: Icon(isObscuretext
-                              ? Icons.visibility_off
-                              : Icons.visibility),
-                        ),
-                      ),
-                      verticalSpace(24),
-                      Align(
-                        alignment: AlignmentDirectional.centerEnd,
-                        child: Text("Forgot Password ?",
-                            style: TextStyles.font13BlueRegular),
-                      ),
-                      verticalSpace(40),
-                      AppTextButton(
-                        buttonText: "login",
-                        textStyle: TextStyles.font16WhaiteSamiBold,
-                        onPressed: () {},
-                      ),
-                      verticalSpace(16),
-                      const TermsAndConditionsText(),
-                      verticalSpace(60),
-                      const DontHaveAccountText(),
-                    ],
-                  ),
+                Column(
+                  children: [
+                    EmailAndPassword(),
+                    verticalSpace(24),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: Text("Forgot Password ?",
+                          style: TextStyles.font13BlueRegular),
+                    ),
+                    verticalSpace(40),
+                    AppTextButton(
+                      buttonText: "login",
+                      textStyle: TextStyles.font16WhaiteSamiBold,
+                      onPressed: () {
+                        validateThenDoLogin(context);
+                      },
+                    ),
+                   
+                    verticalSpace(16),
+                    const TermsAndConditionsText(),
+                    verticalSpace(60),
+                    const AlreadyHaveAccountText(),
+                       const LoginBlocListener(),
+
+                  ],
                 ),
               ],
             ),
@@ -85,5 +68,16 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+ void validateThenDoLogin(BuildContext context) {
+    if (context.read<LoginCubit>().formKey.currentState!.validate()) {
+      context.read<LoginCubit>().emitLoginState(
+            LoginRequestBody(
+              email: context.read<LoginCubit>().emailController.text,
+              password: context.read<LoginCubit>().passwordController.text,
+            ),
+          );
+    }
   }
 }
